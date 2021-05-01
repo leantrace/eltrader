@@ -35,7 +35,9 @@ class BinanceService {
         val dotenv = dotenv()
         val apiKey = dotenv["BINANCE_API_KEY"]
         val apiSecret = dotenv["BINANCE_API_SECRET"]
-        val defaultTickers = listOf("XRPUSDT", "DOGEUSDT", "UNIUSDT", "LTCUSDT", "LINKUSDT", "XRPBNB", "UNIBNB")
+        val tradables = dotenv["TRADEABLES"].split(",")
+        val bridge = dotenv["BRIDGE"]
+        val defaultTickers = tradables.map { "$it$bridge" }
 
 
         val client = HttpClient {
@@ -110,37 +112,26 @@ class BinanceService {
             val price: String,
             val timeInForce: OrderTimeInForce = OrderTimeInForce.GTX
         )
-// TODO add reduceOnly
 
-        // misc
         val miniTickers = mutableMapOf<String, MiniTicker>()
 
         private val logger = KotlinLogging.logger {}
 
-        fun signRequest(data: String): String {
-            return createSignature(data, apiSecret)
-        }
+        private fun signRequest(data: String) = createSignature(data, apiSecret)
 
-        fun createSignature(data: String, key: String): String {
+        private fun createSignature(data: String, key: String): String {
             val sha256Hmac = Mac.getInstance("HmacSHA256")
             val secretKey = SecretKeySpec(key.toByteArray(), "HmacSHA256")
             sha256Hmac.init(secretKey)
-
             return Hex.encodeHexString(sha256Hmac.doFinal(data.toByteArray()))
-
-            // For base64
-            // return Base64.getEncoder().encodeToString(sha256Hmac.doFinal(data.toByteArray()))
         }
 
-        fun extractQueryParamsAsText(sourceBuilder: URLBuilder): String {
+        private fun extractQueryParamsAsText(sourceBuilder: URLBuilder): String {
             val builderCopy = URLBuilder(sourceBuilder)
-            return builderCopy
-                .build()
-                .fullPath
-                .substringAfter("?")
+            return builderCopy.build().fullPath.substringAfter("?")
         }
 
-        fun URLBuilder.signedParameters(block: URLBuilder.() -> Unit) {
+        private fun URLBuilder.signedParameters(block: URLBuilder.() -> Unit) {
             val currentBuilder = this
             currentBuilder.block()
             val queryParamsAsText = extractQueryParamsAsText(currentBuilder)
@@ -164,9 +155,40 @@ class BinanceService {
                 }
             }
         }
+
         data class CoinInformation(
             val coin: String,
-            val free: BigDecimal,
+            val free : BigDecimal,
+            val depositAllEnable : Boolean,
+            val freeze : BigDecimal,
+            val ipoable : BigDecimal,
+            val ipoing : BigDecimal,
+            val isLegalMoney : Boolean,
+            val locked : BigDecimal,
+            val name : String,
+            val networkList : List<NetworkList>,
+            val storage : BigDecimal,
+            val trading : Boolean,
+            val withdrawAllEnable : Boolean,
+            val withdrawing : BigDecimal
+        )
+        data class NetworkList(
+            val addressRegex: String,
+            val coin: String,
+            val depositEnable: Boolean,
+            val isDefault: Boolean,
+            val memoRegex: String,
+            val minConfirm: Int,
+            val name: String,
+            val network: String,
+            val resetAddressStatus: Boolean,
+            val unLockConfirm: Int,
+            val withdrawEnable: Boolean,
+            val withdrawFee: BigDecimal,
+            val withdrawMin: BigDecimal,
+            val depositDesc: String?,
+            val withdrawDesc: String?,
+            val specialTips: String?
         )
 
         suspend fun coinsInformation(): List<CoinInformation> {

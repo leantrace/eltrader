@@ -7,10 +7,11 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.text.SimpleDateFormat
 
 /**
- * Application scope object mapper utility, maps objects to JSON representation and vice-versa
  *
- * @author dame.gjorgjievski
- * @see ObjectMapper
+ *
+ * Created on 30.04.21
+ * @author: Alexander Schamne <alexander.schamne@leantrace.ch>
+ *
  */
 class AppObjectMapper : ObjectMapper {
 

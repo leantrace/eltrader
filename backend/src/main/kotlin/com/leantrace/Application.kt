@@ -13,7 +13,6 @@ package com.leantrace
  * @author: Alexander Schamne <alexander.schamne@leantrace.ch>
  *
  */
-
 import com.sun.tools.javac.Main
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.GlobalScope
