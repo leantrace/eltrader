@@ -16,7 +16,7 @@ import java.util.*
  *
  *
  * Created on 30.04.21
- * @author: Alexander Schamne <alexander.schamne@leantrace.ch>
+ * @author: Alexander Schamne <alexander.schamne@gmail.com>
  *
  */
 internal class UnixTimestampDeserializer : JsonDeserializer<LocalDateTime?>() {

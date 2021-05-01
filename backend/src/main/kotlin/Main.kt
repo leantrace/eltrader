@@ -18,7 +18,7 @@ import java.util.logging.Logger
  * leantrace GmbH.
  *
  * Created on 30.04.21
- * @author: Alexander Schamne <alexander.schamne@leantrace.ch>
+ * @author: Alexander Schamne <alexander.schamne@gmail.com>
  *
  */
 

@@ -24,7 +24,7 @@ import javax.crypto.spec.SecretKeySpec
  *
  *
  * Created on 30.04.21
- * @author: Alexander Schamne <alexander.schamne@leantrace.ch>
+ * @author: Alexander Schamne <alexander.schamne@gmail.com>
  *
  */
 class BinanceService {
