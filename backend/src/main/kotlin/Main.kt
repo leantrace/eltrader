@@ -1,3 +1,6 @@
+import com.leantrace.clients.binance.BinanceService
+import com.leantrace.clients.binance.BinanceServiceRestApi
+import com.leantrace.clients.binance.CandlestickInterval
 import com.sun.tools.javac.Main
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.GlobalScope
@@ -32,25 +35,30 @@ fun main() {
 
     println(apiKey + apiSecret)
 
-    GlobalScope.launch {
+    /* GlobalScope.launch {
         repeat(Int.MAX_VALUE) {
             logger.info {
-                BinanceService.miniTickers.map { entry ->
+                BinanceService().miniTickers.map { entry ->
                     "[${entry.key}] ${entry.value.value}"
                 }.joinToString()
             }
             delay(1000L)
         }
-    }
+    }*/
 
     GlobalScope.launch {
-        //BinanceService.performWebSocket()
+        //com.leantrace.clients.binance.BinanceService.performWebSocket()
     }
 
 
     runBlocking {
-        val r = BinanceService.coinsInformation()
-        r.filter { it.free > BigDecimal.ZERO }.forEach { println(it) }
+        val s: BinanceServiceRestApi = BinanceService()
+        //val r = BinanceService().coinsInformation()
+        //r.filter { it.free > BigDecimal.ZERO }.forEach { println(it) }
+        //println(s.getAccount())
+        //println(s.getCandlestickBars("XRPUSDT", CandlestickInterval.ONE_MINUTE.intervalId))
+        //println(s.startUserDataStream())
+        println(s.getLatestPrice("XRPUSDT"))
         delay(100L)
     }
 }

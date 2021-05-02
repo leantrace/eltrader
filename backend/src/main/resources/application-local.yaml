@@ -1,0 +1,20 @@
+server:
+  error:
+    include-message: always
+
+spring:
+  security:
+    user:
+      name: admin
+      password: admin
+      roles: ADMIN
+
+eltrader:
+  data:
+    mongodb:
+      database: eltrader
+      uri: mongodb://localhost:27017/?replicaSet=rs0
+
+mongock:
+  change-logs-scan-package: com.leantrace.infrastructure.mongo.changelogs
+  transaction-enabled: false

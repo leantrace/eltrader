@@ -12,7 +12,7 @@ repositories {
 
 val ktorVersion = "1.5.4"
 val logbackVersion = "1.2.3"
-//val kotlin_version = "1.4.0-rc"
+val mongockVersion = "4.3.8"
 
 plugins {
     val kotlinVersion = "1.5.0-RC" // 1.5.0-RC
@@ -53,6 +53,14 @@ dependencies {
     implementation("commons-codec:commons-codec:1.15")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     implementation("org.springframework.boot:spring-boot-starter-web")
+
+    implementation("io.zipkin.brave:brave-instrumentation-mongodb:5.13.3")
+    implementation("io.micrometer:micrometer-core:1.6.6")
+
+    implementation("com.github.cloudyrock.mongock:mongock-spring-v5:$mongockVersion")
+    implementation("com.github.cloudyrock.mongock:mongodb-springdata-v3-driver:$mongockVersion")
+
+    implementation("org.ta4j:ta4j-core:0.14")
 }
 
 tasks.withType<KotlinCompile> {
