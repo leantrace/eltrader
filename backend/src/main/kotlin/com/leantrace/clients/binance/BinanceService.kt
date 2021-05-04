@@ -20,7 +20,6 @@ import java.time.Instant
 import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import kotlin.collections.HashMap
 
 
 /**
@@ -46,11 +45,8 @@ class BinanceService : BinanceServiceRestApi, BinanceServiceWSApi {
 
 
     private lateinit var listenKey: String
-    private val BIDS = "BIDS"
-    private val ASKS = "ASKS"
     private val INTERVAL: CandlestickInterval = CandlestickInterval.ONE_MINUTE
     private val lastUpdateId: Long = 0
-    private val depthCache: Map<String, NavigableMap<BigDecimal, BigDecimal>> = emptyMap()
     private val secret: String? = null
     private val symbol: String? = null
     private var candlesticksCache: Map<Long, Candlestick> = emptyMap()
@@ -269,6 +265,21 @@ class BinanceService : BinanceServiceRestApi, BinanceServiceWSApi {
         }
     }
 
+
+
+    override suspend fun getOrderBook(symbol: String, limit: OrderBookLimit?): OrderBook {
+        val r = client.get<String>("$baseUrl/api/v3/depth") {
+            header("X-MBX-APIKEY", apiKey)
+            url {
+                parameter("symbol", symbol)
+                limit?.let { parameter("limit", limit.limit) }
+            }
+        }
+        return withContext(Dispatchers.IO) {
+            AppObjectMapper.mapper().readValue(r, OrderBook::class.java)
+        }
+    }
+
     /**
      *
      *
@@ -281,12 +292,6 @@ class BinanceService : BinanceServiceRestApi, BinanceServiceWSApi {
      *
      *
      */
-
-    private final val asks = depthCache[ASKS]
-    private final val bids = depthCache[BIDS]
-
-    // val bestBid = bids!!.firstEntry()
-    // val bestAsk = asks!!.firstEntry()
 
     /**
      * Initializes the asset balance cache by using the REST API and starts a new user data streaming session.

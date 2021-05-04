@@ -17,4 +17,17 @@ interface BinanceServiceRestApi {
     suspend fun getLatestPrice(symbol: String): Price
 
     suspend fun getCandlestickBars(symbol: String, interval: String, limit: Int? = null, startTime: Long? = null, endTime: Long? = null): List<Candlestick>
+
+    suspend fun getOrderBook(symbol: String, limit: OrderBookLimit? = null): OrderBook
+}
+
+enum class OrderBookLimit(val limit: Int) {
+    FIVE(5),
+    TEN(10),
+    TWENTY(20),
+    FIFTY(50),
+    ONE_HUNDRET(100),
+    FIVE_HUNDRET(500),
+    ONE_THOUSAND(1000),
+    FIVE_THOUSAND(5000)
 }

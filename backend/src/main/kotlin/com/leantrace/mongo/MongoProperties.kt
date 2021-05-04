@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
 
 @ConstructorBinding
-@ConfigurationProperties("eltrader.data.mongodb")
+@ConfigurationProperties("app.data.mongodb")
 data class MongoProperties(val uri: String,
                            val database: String,
                            val user: String?,

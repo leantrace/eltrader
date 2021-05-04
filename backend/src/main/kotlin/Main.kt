@@ -58,7 +58,8 @@ fun main() {
         //println(s.getAccount())
         //println(s.getCandlestickBars("XRPUSDT", CandlestickInterval.ONE_MINUTE.intervalId))
         //println(s.startUserDataStream())
-        println(s.getLatestPrice("XRPUSDT"))
+        //println(s.getLatestPrice("XRPUSDT"))
+        println(s.getOrderBook("XRPUSDT"))
         delay(100L)
     }
 }

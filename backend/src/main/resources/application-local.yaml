@@ -9,7 +9,12 @@ spring:
       password: admin
       roles: ADMIN
 
-eltrader:
+app:
+  env:
+    binance-api-key: ${env.BINANCE_API_KEY}
+    binance-api-secret: ${env.BINANCE_API_SECRET}
+    tradeables: ${env.TRADEABLES:XRP}
+    bridge: ${env.BRIDGE:USDT}
   data:
     mongodb:
       database: eltrader

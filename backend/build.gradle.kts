@@ -57,6 +57,8 @@ dependencies {
     implementation("io.zipkin.brave:brave-instrumentation-mongodb:5.13.3")
     implementation("io.micrometer:micrometer-core:1.6.6")
 
+    implementation("me.paulschwarz:spring-dotenv:2.3.0")
+
     implementation("com.github.cloudyrock.mongock:mongock-spring-v5:$mongockVersion")
     implementation("com.github.cloudyrock.mongock:mongodb-springdata-v3-driver:$mongockVersion")
 
