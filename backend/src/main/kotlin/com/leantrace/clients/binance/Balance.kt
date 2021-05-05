@@ -1,7 +1,10 @@
 package com.leantrace.clients.binance
 
+import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class Balance(
-    val asset: String,
-    val free: String,
-    val locked: String
+    @JsonAlias("a", "asset") val asset: String,
+    @JsonAlias("f", "free") val free: String,
+    @JsonAlias("l", "locked") val locked: String
 )

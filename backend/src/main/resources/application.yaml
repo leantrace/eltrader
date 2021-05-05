@@ -11,6 +11,8 @@ spring:
 
 app:
   env:
+    binance-rest-url: ${env.BINANCE_REST_URL}
+    binance-wss-url: ${env.BINANCE_WSS_URL}
     binance-api-key: ${env.BINANCE_API_KEY}
     binance-api-secret: ${env.BINANCE_API_SECRET}
     tradeables: ${env.TRADEABLES:XRP}

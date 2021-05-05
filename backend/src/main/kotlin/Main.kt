@@ -1,13 +1,13 @@
-import com.leantrace.clients.binance.BinanceService
+import com.leantrace.AppConfiguration
+import com.leantrace.clients.binance.BinanceServiceRest
 import com.leantrace.clients.binance.BinanceServiceRestApi
-import com.leantrace.clients.binance.CandlestickInterval
+import com.leantrace.clients.binance.BinanceServiceWS
 import com.sun.tools.javac.Main
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.math.BigDecimal
 import java.util.logging.Logger
 
 /**
@@ -30,10 +30,13 @@ import java.util.logging.Logger
 fun main() {
     val logger = Logger.getLogger(Main::class.java.name)
     val dotenv = dotenv()
-    val apiKey = dotenv["BINANCE_API_KEY"]
-    val apiSecret = dotenv["BINANCE_API_SECRET"]
-
-    println(apiKey + apiSecret)
+    val config = AppConfiguration(
+        dotenv["BINANCE_REST_URL"],
+        dotenv["BINANCE_WSS_URL"],
+        dotenv["BINANCE_API_KEY"],
+        dotenv["BINANCE_API_SECRET"],
+        dotenv["TRADEABLES"],
+        dotenv["BRIDGE"])
 
     /* GlobalScope.launch {
         repeat(Int.MAX_VALUE) {
@@ -47,19 +50,29 @@ fun main() {
     }*/
 
     GlobalScope.launch {
-        //com.leantrace.clients.binance.BinanceService.performWebSocket()
+        //BinanceServiceWS(config).depth(listOf("XRPUSDT")) { response -> logger.info { "HELLO: $response" } }
+        //BinanceServiceWS(config).miniTicker(listOf("XRPUSDT"))
+        //BinanceServiceWS(config).aggTrade(listOf("XRPUSDT"))
+        //BinanceServiceWS(config).performWebSocket()
+        val listenKey = "zhBc6pkIaMlmXJSSEjAtKt2ilkj3qY7mQyYMHX26aqBgKayT1QFTUOgwawJU"// BinanceServiceRest(config).startUserDataStream()
+        BinanceServiceWS(config).userData(listenKey){
+            response ->
+                logger.info { "HELLO: $response" }
+
+        }
+
     }
 
 
     runBlocking {
-        val s: BinanceServiceRestApi = BinanceService()
+        val s: BinanceServiceRestApi = BinanceServiceRest(config)
         //val r = BinanceService().coinsInformation()
         //r.filter { it.free > BigDecimal.ZERO }.forEach { println(it) }
         //println(s.getAccount())
         //println(s.getCandlestickBars("XRPUSDT", CandlestickInterval.ONE_MINUTE.intervalId))
         //println(s.startUserDataStream())
         //println(s.getLatestPrice("XRPUSDT"))
-        println(s.getOrderBook("XRPUSDT"))
-        delay(100L)
+        //println(s.getOrderBook("XRPUSDT"))
+        delay(100000L)
     }
 }

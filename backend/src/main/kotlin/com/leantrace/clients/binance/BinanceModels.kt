@@ -1,6 +1,7 @@
 package com.leantrace.clients.binance
 
 import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.leantrace.converters.UnixTimestampDeserializer
 import java.math.BigDecimal
@@ -57,6 +58,69 @@ data class StreamResponse(
     val stream: String,
     val data: String
 )
+
+
+
+data class UserData(
+    val outboundAccountPosition: UserDataOutboundAccountPosition? = null,
+    val executionReport: UserDataOutboundAccountPosition? = null,
+    val balanceUpdate: UserDataOutboundAccountPosition? = null,
+    val listStatus: UserDataOutboundAccountPosition? = null
+)
+
+data class UserDataOutboundAccountPosition(
+    @JsonAlias("e") val eventType: String,
+    @JsonAlias("E") @JsonDeserialize(using = UnixTimestampDeserializer::class) val eventTime: LocalDateTime,
+    @JsonAlias("u") @JsonDeserialize(using = UnixTimestampDeserializer::class) val lastAccountUpdate: LocalDateTime,
+    @JsonAlias("B") val balances: List<Balance>
+)
+
+data class UserDataExecutionUpdate(
+    @JsonAlias("e") val eventType: String,
+    @JsonAlias("E") @JsonDeserialize(using = UnixTimestampDeserializer::class) val eventTime: LocalDateTime,
+    @JsonAlias("c") val clientOrderID: String,
+    @JsonAlias("C") val originalClientOrderID: String,
+    @JsonAlias("f") val timeInForce: String,
+    @JsonAlias("F") val icebergQuantity: BigDecimal,
+    @JsonAlias("g") val orderListId: Long,
+    @JsonAlias("i") val orderID: Long,
+    @JsonAlias("I") val iIgnore: Long,
+    @JsonAlias("l") val lastExecutedQuantity: BigDecimal,
+    @JsonAlias("L") val lastExecutedPrice: BigDecimal,
+    @JsonAlias("m") val isTradeMakerSide: Boolean,
+    @JsonAlias("M") val mIgnore: Boolean,
+    @JsonAlias("n") val n: String,
+    @JsonAlias("N") val n: Any,
+    @JsonAlias("o") val o: String,
+    @JsonAlias("O") val o: Long,
+    @JsonAlias("p") val p: String,
+    @JsonAlias("P") val p: String,
+    @JsonAlias("q") val q: String,
+    @JsonAlias("Q") val q: String,
+    @JsonAlias("r") val r: String,
+    @JsonAlias("s") val s: String,
+    @JsonAlias("S") val s: String,
+    @JsonAlias("T") val t: Long,
+    @JsonAlias("t") val t: Int,
+    @JsonAlias("w") val w: Boolean,
+    @JsonAlias("x") val x: String,
+    @JsonAlias("X") val x: String,
+    @JsonAlias("Y") val y: String,
+    @JsonAlias("z") val z: String,
+    @JsonAlias("Z") val z: String
+)
+
+
+data class DiffDepth(
+    @JsonAlias("e") val eventType: String,
+    @JsonAlias("E") @JsonDeserialize(using = UnixTimestampDeserializer::class) val eventTime: LocalDateTime,
+    @JsonAlias("s") val symbol: String,
+    @JsonAlias("U") val firstUpdateIDInEvent: Long,
+    @JsonAlias("u") val finalUpdateIDInEvent: Long,
+    @JsonAlias("b") val bids: List<OrderBookEntry>,
+    @JsonAlias("a") val asks: List<OrderBookEntry>
+)
+
 
 data class MiniTicker(
     @JsonAlias("s") val symbol: String,
