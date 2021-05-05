@@ -1,7 +1,5 @@
 import com.leantrace.AppConfiguration
-import com.leantrace.clients.binance.BinanceServiceRest
-import com.leantrace.clients.binance.BinanceServiceRestApi
-import com.leantrace.clients.binance.BinanceServiceWS
+import com.leantrace.clients.binance.*
 import com.sun.tools.javac.Main
 import io.github.cdimascio.dotenv.dotenv
 import kotlinx.coroutines.GlobalScope
@@ -54,10 +52,15 @@ fun main() {
         //BinanceServiceWS(config).miniTicker(listOf("XRPUSDT"))
         //BinanceServiceWS(config).aggTrade(listOf("XRPUSDT"))
         //BinanceServiceWS(config).performWebSocket()
-        val listenKey = "zhBc6pkIaMlmXJSSEjAtKt2ilkj3qY7mQyYMHX26aqBgKayT1QFTUOgwawJU"// BinanceServiceRest(config).startUserDataStream()
+        val listenKey = BinanceServiceRest(config).startUserDataStream()
         BinanceServiceWS(config).userData(listenKey){
             response ->
-                logger.info { "HELLO: $response" }
+                if (response["e"]?.toString()?.equals(UserDataEventTypes.executionReport.toString()) == true) {
+                    val ret = AppObjectMapper.mapper().convertValue(response, UserDataExecutionUpdate::class.java)
+                    logger.info { ret.toString() }
+                } else {
+                    logger.info { "HELLO: $response" }
+                }
 
         }
 
@@ -73,6 +76,6 @@ fun main() {
         //println(s.startUserDataStream())
         //println(s.getLatestPrice("XRPUSDT"))
         //println(s.getOrderBook("XRPUSDT"))
-        delay(100000L)
+        delay(10000000L)
     }
 }

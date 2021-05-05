@@ -1,7 +1,6 @@
 package com.leantrace.clients.binance
 
 import com.fasterxml.jackson.annotation.JsonAlias
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.leantrace.converters.UnixTimestampDeserializer
 import java.math.BigDecimal
@@ -68,11 +67,42 @@ data class UserData(
     val listStatus: UserDataOutboundAccountPosition? = null
 )
 
+
+enum class UserDataEventTypes {
+    listStatus, executionReport, balanceUpdate, outboundAccountPosition
+}
+
+data class UserDataListStatusOrders(
+    @JsonAlias("c") val clientOrderId: String,
+    @JsonAlias("i") val orderId: Int,
+    @JsonAlias("s") val symbol: String
+)
+data class UserDataListStatus(
+    @JsonAlias("e") val eventType: String,
+    @JsonAlias("E") @JsonDeserialize(using = UnixTimestampDeserializer::class) val eventTime: LocalDateTime,
+    @JsonAlias("c") val contingencyType: String,
+    @JsonAlias("C") val listClientOrderID: String,
+    @JsonAlias("g") val orderListId: Long,
+    @JsonAlias("l") val listStatusType: String,
+    @JsonAlias("L") val listOrderStatus: String,
+    @JsonAlias("O") val orders: List<UserDataListStatusOrders>,
+    @JsonAlias("r") val orderRejectReason: String,
+    @JsonAlias("s") val symbol: String,
+    @JsonAlias("T") @JsonDeserialize(using = UnixTimestampDeserializer::class) val transactionTime: LocalDateTime,
+)
 data class UserDataOutboundAccountPosition(
     @JsonAlias("e") val eventType: String,
     @JsonAlias("E") @JsonDeserialize(using = UnixTimestampDeserializer::class) val eventTime: LocalDateTime,
     @JsonAlias("u") @JsonDeserialize(using = UnixTimestampDeserializer::class) val lastAccountUpdate: LocalDateTime,
     @JsonAlias("B") val balances: List<Balance>
+)
+
+data class UserDataBalanceUpdate(
+    @JsonAlias("e") val eventType: String,
+    @JsonAlias("E") @JsonDeserialize(using = UnixTimestampDeserializer::class) val eventTime: LocalDateTime,
+    @JsonAlias("a") val asset: String,
+    @JsonAlias("d") val balanceDelta: BigDecimal,
+    @JsonAlias("T") @JsonDeserialize(using = UnixTimestampDeserializer::class) val clearTime: LocalDateTime,
 )
 
 data class UserDataExecutionUpdate(
@@ -89,25 +119,25 @@ data class UserDataExecutionUpdate(
     @JsonAlias("L") val lastExecutedPrice: BigDecimal,
     @JsonAlias("m") val isTradeMakerSide: Boolean,
     @JsonAlias("M") val mIgnore: Boolean,
-    @JsonAlias("n") val n: String,
-    @JsonAlias("N") val n: Any,
-    @JsonAlias("o") val o: String,
-    @JsonAlias("O") val o: Long,
-    @JsonAlias("p") val p: String,
-    @JsonAlias("P") val p: String,
-    @JsonAlias("q") val q: String,
-    @JsonAlias("Q") val q: String,
-    @JsonAlias("r") val r: String,
-    @JsonAlias("s") val s: String,
-    @JsonAlias("S") val s: String,
-    @JsonAlias("T") val t: Long,
-    @JsonAlias("t") val t: Int,
-    @JsonAlias("w") val w: Boolean,
-    @JsonAlias("x") val x: String,
-    @JsonAlias("X") val x: String,
-    @JsonAlias("Y") val y: String,
-    @JsonAlias("z") val z: String,
-    @JsonAlias("Z") val z: String
+    @JsonAlias("n") val commissionAmount: BigDecimal,
+    @JsonAlias("N") val commissionAsset: String?,
+    @JsonAlias("o") val orderType: String,
+    @JsonAlias("O") @JsonDeserialize(using = UnixTimestampDeserializer::class) val orderCreationTime: LocalDateTime,
+    @JsonAlias("p") val orderPrice: BigDecimal,
+    @JsonAlias("P") val stopPrice: BigDecimal,
+    @JsonAlias("q") val orderQuantity: BigDecimal,
+    @JsonAlias("Q") val quoteOrderQuantity: BigDecimal,
+    @JsonAlias("r") val orderRejectReason: String,
+    @JsonAlias("s") val symbol: String,
+    @JsonAlias("S") val side: String,
+    @JsonAlias("T") @JsonDeserialize(using = UnixTimestampDeserializer::class) val transactionTime: LocalDateTime,
+    @JsonAlias("t") val tradeID: Long,
+    @JsonAlias("w") val isOrderOnTheBook: Boolean,
+    @JsonAlias("x") val currentExecutionType: String,
+    @JsonAlias("X") val currentOrderStatus: String,
+    @JsonAlias("Y") val lastQuoteAssetTransactedQuantity: BigDecimal,
+    @JsonAlias("z") val cumulativeFilledQuantity: BigDecimal,
+    @JsonAlias("Z") val cumulativeQuoteAssetTransactedQuantity: BigDecimal
 )
 
 

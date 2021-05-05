@@ -71,7 +71,7 @@ class BinanceServiceWS (val config: AppConfiguration) : BinanceServiceWSApi  {
                         logger.info{stream}
                         when (val it = stream.toString().split('@').last()) {
                             channel.replace("@","") -> {
-                                logger.info { data }
+                                // logger.info { data }
                                 val ret = AppObjectMapper.mapper().convertValue(data, clazz)
                                 callback.onResponse(ret)
                             }
