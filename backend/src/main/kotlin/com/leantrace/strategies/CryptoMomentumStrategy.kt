@@ -1,13 +1,9 @@
 package com.leantrace.strategies
 
 import AppObjectMapper
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.leantrace.AppConfiguration
 import com.leantrace.clients.binance.*
-import com.leantrace.converters.UnixTimestampDeserializer
 import com.leantrace.domain.BinanceOrder
-import com.leantrace.domain.OrderStatus
-import com.leantrace.domain.TimeInForce
 import com.leantrace.domain.binanceorder.BinanceOrderService
 import com.leantrace.exceptions.StrategyException
 import com.leantrace.exceptions.TradingApiException
@@ -203,7 +199,7 @@ class CryptoMomentumStrategy(
                 executeAlgoForWhenLastOrderWasNone(bestBidPrice)
             }
             lastOrder?.side === OrderSide.BUY -> {
-                // executeAlgoForWhenLastOrderWasBuy(bestBidPrice)
+                executeAlgoForWhenLastOrderWasBuy()
             }
             lastOrder?.side === OrderSide.SELL -> {
                 //executeAlgoForWhenLastOrderWasSell(bestBidPrice, bestAskPrice)
@@ -291,7 +287,7 @@ class CryptoMomentumStrategy(
     private suspend fun executeAlgoForWhenLastOrderWasNone(currentBidPrice: BigDecimal) {
         logger.info("$symbol OrderType is NONE - looking for new BUY order at [${DecimalFormat(DECIMAL_FORMAT).format(currentBidPrice)}]")
         try {
-            if (strategy.shouldEnter(endIndex) ||true) {
+            if (strategy.shouldEnter(endIndex)) {
                 logger.info("$strategyName Sending initial BUY order to exchange --->")
                 amountOfBaseCurrencyToBuy = getAmountOfBaseCurrencyToBuyForGivenCounterCurrencyAmount(config.bridgeAmount)
                 val entered = tradingRecord.enter(
@@ -300,7 +296,9 @@ class CryptoMomentumStrategy(
                 )
                 if (entered) {
                     logger.info("$strategyName should ENTER on $endIndex")
-                    val newOrder = apirest.createOrder(OrderRequest(symbol, OrderSide.BUY, OrderType.MARKET, amountOfBaseCurrencyToBuy, currentBidPrice))
+                    val order = OrderRequest(symbol, OrderSide.BUY, OrderType.MARKET, amountOfBaseCurrencyToBuy)
+                    logger.info("Create Order: $order")
+                    val newOrder = apirest.createOrder(order)
                     val binanceBuyOrder = BinanceOrder(
                         clientOrderId = newOrder.clientOrderId,
                         symbol = newOrder.symbol,
@@ -331,6 +329,137 @@ class CryptoMomentumStrategy(
         }
     }
 
+    @Throws(StrategyException::class)
+    private suspend fun executeAlgoForWhenLastOrderWasBuy() {
+        try {
+            val orders = apirest.openOrders(symbol)
+            val o = orders.find { lastOrder?.orderId?.let { id -> it.orderId == id } == true }
+            // If the order is not there, it must have all filled.
+            if (o == null) {
+                logger.info(
+                    symbol + " ^^^ Yay!!! Last BUY Order Id [" + lastOrder?.orderId
+                            + "] filled at [" + lastOrder?.price + "] " + "amount :[ "
+                            + lastOrder?.origQty + " ]"
+                )
+            //The last buy order was filled, so lets see if we can send a new sell order.
+            if (strategy.shouldExit(endIndex)) {
+                    val newAskPrice: BigDecimal = asks.lastEntry().value.setScale(8, RoundingMode.HALF_UP)
+                    val exited = tradingRecord.exit(
+                        endIndex, DecimalNum.valueOf(newAskPrice),
+                        DecimalNum.valueOf(lastOrder!!.origQty)
+                    )
+                    if (exited) {
+                        logger.info(
+                            (symbol + " Placing new SELL order at ask price ["
+                                    + DecimalFormat(DECIMAL_FORMAT).format(
+                                newAskPrice
+                            ) + "]")
+                        )
+                        logger.info(symbol + " Sending new SELL order to exchange --->")
+
+                        val order = OrderRequest(symbol, OrderSide.SELL, OrderType.MARKET, lastOrder!!.origQty)
+                        logger.info("Create Order: $order")
+                        val newOrder = apirest.createOrder(order)
+                        val binanceSellOrder = BinanceOrder(
+                            clientOrderId = newOrder.clientOrderId,
+                            symbol = newOrder.symbol,
+                            orderId = newOrder.orderId,
+                            transactTime = newOrder.transactTime,
+                            price = newOrder.price,
+                            origQty = newOrder.origQty,
+                            executedQty = newOrder.executedQty,
+                            cummulativeQuoteQty = newOrder.cummulativeQuoteQty,
+                            status = newOrder.status,
+                            timeInForce = newOrder.timeInForce,
+                            type = com.leantrace.domain.OrderType.valueOf(newOrder.type.toString()),
+                            side = newOrder.side
+                        )
+                        lastOrder = newOrder
+                        logger.info(
+                            (symbol + " New SELL Order sent successfully. ID: "
+                                    + lastOrder?.orderId)
+                        )
+                        binanceOrderService.create(binanceSellOrder)
+                    }
+                }
+            } else {
+                logger.info(
+                    (symbol + " !!! Still have BUY Order " + lastOrder?.orderId
+                            + " waiting to fill at [" + lastOrder?.price + "] - holding last BUY order...")
+                )
+            }
+        } catch (e: java.lang.Exception) {
+            logger.error(
+                (symbol + " New order to SELL base currency failed because Exchange threw an "
+                        + "exception. Telling Trading Engine to shutdown bot! Last Order: " + lastOrder),
+                e
+            )
+            throw StrategyException(e)
+        }
+    }
+
+    @Throws(StrategyException::class)
+    private suspend fun executeAlgoForWhenLastOrderWasSell(
+        currentBidPrice: BigDecimal,
+        currentAskPrice: BigDecimal
+    ) {
+        try {
+
+            val orders = apirest.openOrders(symbol)
+            val o = orders.find { lastOrder?.orderId?.let { id -> it.orderId == id } == true }
+            if (o != null) {
+                logger.info(
+                    symbol + " Yes!!! Last SELL Order Id [" + lastOrder?.orderId
+                            + "] filled at [" + lastOrder?.price + "]" + "amount :[ " + lastOrder?.origQty + " ]")
+                if (strategy.shouldEnter(endIndex)) {
+                    val entered = tradingRecord.enter(
+                        endIndex, DecimalNum.valueOf(currentBidPrice),
+                        DecimalNum.valueOf(amountOfBaseCurrencyToBuy)
+                    )
+                    if (entered) {
+                        val amountOfBaseCurrencyToBuy = getAmountOfBaseCurrencyToBuyForGivenCounterCurrencyAmount(config.bridgeAmount)
+                        logger.info(
+                            (symbol + " Placing new BUY order at bid price ["
+                                    + DecimalFormat(DECIMAL_FORMAT).format(
+                                currentBidPrice
+                            ) + "]")
+                        )
+                        logger.info(symbol + " Sending new BUY order to exchange --->")
+                        val order = OrderRequest(symbol, OrderSide.BUY, OrderType.MARKET, amountOfBaseCurrencyToBuy)
+                        logger.info("Create Order: $order")
+                        val newOrder = apirest.createOrder(order)
+                        val binanceBuyOrder = BinanceOrder(
+                            clientOrderId = newOrder.clientOrderId,
+                            symbol = newOrder.symbol,
+                            orderId = newOrder.orderId,
+                            transactTime = newOrder.transactTime,
+                            price = newOrder.price,
+                            origQty = newOrder.origQty,
+                            executedQty = newOrder.executedQty,
+                            cummulativeQuoteQty = newOrder.cummulativeQuoteQty,
+                            status = newOrder.status,
+                            timeInForce = newOrder.timeInForce,
+                            type = com.leantrace.domain.OrderType.valueOf(newOrder.type.toString()),
+                            side = newOrder.side
+                        )
+                        lastOrder = newOrder
+                        logger.info(
+                            (symbol + " New BUY Order sent successfully. With ID: "
+                                    + lastOrder?.orderId)
+                        )
+                        binanceOrderService.create(binanceBuyOrder)
+                    }
+                }
+            }
+        } catch (e: java.lang.Exception) {
+            logger.error(
+                (symbol + " New order to BUY base currency failed because Exchange threw "
+                        + "exception. Telling Trading Engine to shutdown bot! Last Order: " + lastOrder), e
+            )
+            throw StrategyException(e)
+        }
+    }
+
     @Throws(TradingApiException::class)
     private suspend fun getAmountOfBaseCurrencyToBuyForGivenCounterCurrencyAmount(amountOfCounterCurrencyToTrade: BigDecimal): BigDecimal {
         logger.info(
@@ -345,23 +474,7 @@ class CryptoMomentumStrategy(
             (symbol + " Last trade price for 1 " + baseCurrency + " was: "
                     + DecimalFormat(DECIMAL_FORMAT).format(lastTradePrice) + config.bridge)
         )
-        val amountOfBaseCurrencyToBuy =
-            amountOfCounterCurrencyToTrade.divide(lastTradePrice, 8, RoundingMode.HALF_DOWN)
-        /**
-         * Some pairs have a minimum trade size. We have to round the base currency to buy to the
-         * minimum trade size if the base currency size is smaller then the minimum trade size.
-         */
-        // TODO: fix ^
-        if ((symbol.toLowerCase() == "bnbbtc")) {
-            val newAmountOfBaseCurrencyToBuy = amountOfBaseCurrencyToBuy.setScale(0, RoundingMode.UP)
-            logger.info(
-                (symbol + " Amount of base currency (" + baseCurrency
-                        + ") to BUY for " + DecimalFormat(DECIMAL_FORMAT).format(newAmountOfBaseCurrencyToBuy)
-                        + " " + config.bridge + " based on last market trade price: "
-                        + newAmountOfBaseCurrencyToBuy)
-            )
-            return newAmountOfBaseCurrencyToBuy
-        }
+        val amountOfBaseCurrencyToBuy = amountOfCounterCurrencyToTrade.divide(lastTradePrice, 8, RoundingMode.HALF_DOWN)
         logger.info(
             (symbol + " Amount of base currency (" + baseCurrency
                     + ") to BUY for " + DecimalFormat(DECIMAL_FORMAT).format(amountOfCounterCurrencyToTrade)

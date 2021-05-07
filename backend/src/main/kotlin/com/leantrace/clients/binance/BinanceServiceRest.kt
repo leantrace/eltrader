@@ -3,7 +3,6 @@ package com.leantrace.clients.binance
 import AppObjectMapper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.leantrace.AppConfiguration
-import com.leantrace.domain.TimeInForce
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -96,18 +95,22 @@ class BinanceServiceRest(val config: AppConfiguration) : BinanceServiceRestApi {
         }
     }
 
-    /**
-     *
-     *
-     *
-     *
-     * APIs
-     *
-     *
-     *
-     *
-     *
-     */
+    suspend fun openOrders(symbol: String, recvWindow: Long? = null): List<Order> {
+        val r = client.get<String>("${config.binanceRestUrl}/api/v3/openOrders") {
+            header("X-MBX-APIKEY", config.binanceApiKey)
+            url {
+                signedParameters {
+                    parameter("symbol", symbol)
+                    recvWindow?.let { parameter("recvWindow", recvWindow) }
+                    parameter("timestamp", Instant.now().toEpochMilli())
+                }
+            }
+        }
+        return withContext(Dispatchers.IO) {
+            AppObjectMapper.mapper().readValue(r, object : TypeReference<List<Order>>() {})
+        }
+    }
+
     override suspend fun coinsInformation(): List<CoinInformation> {
         val r = client.get<String>("${config.binanceRestUrl}/sapi/v1/capital/config/getall") {
             header("X-MBX-APIKEY", config.binanceApiKey)

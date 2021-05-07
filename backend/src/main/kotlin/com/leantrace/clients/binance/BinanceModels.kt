@@ -283,6 +283,6 @@ data class OrderRequest(
     val side: OrderSide,
     val type: OrderType,
     val quantity: BigDecimal,
-    val price: BigDecimal,
+    val price: BigDecimal? = null,
     val timeInForce: OrderTimeInForce = OrderTimeInForce.GTX
 )

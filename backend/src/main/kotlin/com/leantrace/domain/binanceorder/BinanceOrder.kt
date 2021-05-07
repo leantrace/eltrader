@@ -31,6 +31,29 @@ class BinanceOrder(
 
     var clientOrderId = clientOrderId
         private set
+    var symbol = symbol
+        private set
+    var orderId = orderId
+        private set
+    var transactTime = transactTime
+        private set
+    var price = price
+        private set
+    var origQty = origQty
+        private set
+    var executedQty = executedQty
+        private set
+    var cummulativeQuoteQty = cummulativeQuoteQty
+        private set
+    var status = status
+        private set
+    var timeInForce = timeInForce
+        private set
+    var type = type
+        private set
+    var side = side
+        private set
+
 
 }
 

@@ -19,13 +19,14 @@ class TradingEngine(val strategy: CryptoMomentumStrategy) {
     init {
         GlobalScope.launch {
             strategy.init()
-            strategy.execute()
         }
     }
 
-    @Scheduled(fixedDelay = 1000000)
+    @Scheduled(fixedDelay = 10*1000)
     fun scheduleFixedDelayTask() {
         logger.info("Execute: "+LocalDateTime.now())
-        //cryptoMomentumStrategy.execute()
+        GlobalScope.launch {
+            strategy.execute()
+        }
     }
 }
