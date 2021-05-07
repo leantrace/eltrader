@@ -58,7 +58,7 @@ class BinanceServiceRest(val config: AppConfiguration) : BinanceServiceRestApi {
     }
 
     override suspend fun createOrder(orderRequest: OrderRequest): Order {
-        /* val r = client.post<String>("${config.binanceRestUrl}/api/v3/order") {
+        val r = client.post<String>("${config.binanceRestUrl}/api/v3/order") {
             header("X-MBX-APIKEY", config.binanceApiKey)
             url {
                 signedParameters {
@@ -72,8 +72,8 @@ class BinanceServiceRest(val config: AppConfiguration) : BinanceServiceRestApi {
                     parameter("timestamp", Instant.now().toEpochMilli())
                 }
             }
-        }*/
-        val r = """
+        }
+        /*val r = """
             {
               "symbol": "BTCUSDT",
               "orderId": 28,
@@ -90,6 +90,7 @@ class BinanceServiceRest(val config: AppConfiguration) : BinanceServiceRestApi {
               "side": "SELL"
             }
             """
+        */
         return withContext(Dispatchers.IO) {
             AppObjectMapper.mapper().readValue(r, Order::class.java)
         }

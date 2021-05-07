@@ -61,6 +61,9 @@ class CryptoMomentumStrategy(
     private var endIndex = 0
     private var amountOfBaseCurrencyToBuy: BigDecimal = BigDecimal.ZERO
 
+    var isInitilized = false
+
+
 
     suspend fun init() {
         config.tradeables.split(",")
@@ -80,6 +83,7 @@ class CryptoMomentumStrategy(
         initializeCandlestickCache(symbol)
         series = setupBarsSeries(symbol)
         strategy = buildStrategy(series)
+        isInitilized = true
     }
 
     private suspend fun initializeDepthCache(symbol: String) {

@@ -26,7 +26,7 @@ class TradingEngine(val strategy: CryptoMomentumStrategy) {
     fun scheduleFixedDelayTask() {
         logger.info("Execute: "+LocalDateTime.now())
         GlobalScope.launch {
-            strategy.execute()
+            if (strategy.isInitilized) strategy.execute()
         }
     }
 }
