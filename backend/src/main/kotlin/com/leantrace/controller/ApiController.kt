@@ -1,6 +1,8 @@
 package com.leantrace.controller
 
 import com.leantrace.strategies.CryptoMomentumStrategy
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -22,7 +24,10 @@ class ApiController(val strategy: CryptoMomentumStrategy) {
         @RequestParam(required = false) page: Int?,
         @RequestParam(required = false) size: Int?,
         @RequestParam(required = false) sort: List<String>?
-    ) = strategy.execute()
+    ) {
+        strategy.init()
+        //strategy.execute()
+    }
 
 
 }

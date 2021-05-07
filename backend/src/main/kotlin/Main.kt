@@ -52,7 +52,8 @@ fun main() {
         //BinanceServiceWS(config).miniTicker(listOf("XRPUSDT"))
         //BinanceServiceWS(config).aggTrade(listOf("XRPUSDT"))
         //BinanceServiceWS(config).performWebSocket()
-        val listenKey = BinanceServiceRest(config).startUserDataStream()
+
+        /*val listenKey = BinanceServiceRest(config).startUserDataStream()
         BinanceServiceWS(config).userData(listenKey){
             response ->
                 if (response["e"]?.toString()?.equals(UserDataEventTypes.executionReport.toString()) == true) {
@@ -63,6 +64,11 @@ fun main() {
                 }
 
         }
+         */
+
+        /* BinanceServiceWS(config).candlestick(listOf("XRPUSDT"), CandlestickInterval.ONE_MINUTE){
+                response -> logger.info { "HELLO $response" }
+        }*/
 
     }
 
@@ -72,7 +78,7 @@ fun main() {
         //val r = BinanceService().coinsInformation()
         //r.filter { it.free > BigDecimal.ZERO }.forEach { println(it) }
         //println(s.getAccount())
-        //println(s.getCandlestickBars("XRPUSDT", CandlestickInterval.ONE_MINUTE.intervalId))
+        println(s.getCandlestickBars("XRPUSDT", CandlestickInterval.ONE_MINUTE.intervalId))
         //println(s.startUserDataStream())
         //println(s.getLatestPrice("XRPUSDT"))
         //println(s.getOrderBook("XRPUSDT"))

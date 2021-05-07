@@ -4,7 +4,7 @@ import io.ktor.client.statement.*
 
 
 interface BinanceServiceRestApi {
-    suspend fun createOrder(orderRequest: OrderRequest): HttpResponse
+    suspend fun createOrder(orderRequest: OrderRequest): Order
 
     suspend fun coinsInformation(): List<CoinInformation>
 
@@ -12,11 +12,11 @@ interface BinanceServiceRestApi {
 
     suspend fun getAccount(): Account
 
-    suspend fun startUserDataStream(): String
+    suspend fun userDataStream(): String
 
     suspend fun getLatestPrice(symbol: String): Price
 
-    suspend fun getCandlestickBars(symbol: String, interval: String, limit: Int? = null, startTime: Long? = null, endTime: Long? = null): List<Candlestick>
+    suspend fun getCandlestickBars(symbol: String, interval: String, limit: Int? = null, startTime: Long? = null, endTime: Long? = null): List<CandlestickArr>
 
     suspend fun getOrderBook(symbol: String, limit: OrderBookLimit? = null): OrderBook
 }

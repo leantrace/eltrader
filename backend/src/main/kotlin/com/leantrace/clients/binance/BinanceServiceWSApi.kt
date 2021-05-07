@@ -6,5 +6,4 @@ fun interface BinanceApiCallback<T> {
 }
 
 interface BinanceServiceWSApi {
-    suspend fun performWebSocket()
 }

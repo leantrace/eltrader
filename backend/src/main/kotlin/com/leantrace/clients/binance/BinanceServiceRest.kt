@@ -3,23 +3,19 @@ package com.leantrace.clients.binance
 import AppObjectMapper
 import com.fasterxml.jackson.core.type.TypeReference
 import com.leantrace.AppConfiguration
-import io.github.cdimascio.dotenv.dotenv
+import com.leantrace.domain.TimeInForce
 import io.ktor.client.*
-import io.ktor.client.features.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import org.apache.commons.codec.binary.Hex
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.data.mongodb.repository.Query
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 import java.time.Instant
-import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -62,8 +58,8 @@ class BinanceServiceRest(val config: AppConfiguration) : BinanceServiceRestApi {
         parameters.append("signature", signRequest(queryParamsAsText))
     }
 
-    override suspend fun createOrder(orderRequest: OrderRequest): HttpResponse {
-        return client.post("${config.binanceRestUrl}/order") {
+    override suspend fun createOrder(orderRequest: OrderRequest): Order {
+        /* val r = client.post<String>("${config.binanceRestUrl}/api/v3/order") {
             header("X-MBX-APIKEY", config.binanceApiKey)
             url {
                 signedParameters {
@@ -77,6 +73,26 @@ class BinanceServiceRest(val config: AppConfiguration) : BinanceServiceRestApi {
                     parameter("timestamp", Instant.now().toEpochMilli())
                 }
             }
+        }*/
+        val r = """
+            {
+              "symbol": "BTCUSDT",
+              "orderId": 28,
+              "orderListId": -1, //Unless OCO, value will be -1
+              "clientOrderId": "6gCrw2kRUAF9CvJDGP16IP",
+              "transactTime": 1507725176595,
+              "price": "0.00000000",
+              "origQty": "10.00000000",
+              "executedQty": "10.00000000",
+              "cummulativeQuoteQty": "10.00000000",
+              "status": "FILLED",
+              "timeInForce": "GTC",
+              "type": "MARKET",
+              "side": "SELL"
+            }
+            """
+        return withContext(Dispatchers.IO) {
+            AppObjectMapper.mapper().readValue(r, Order::class.java)
         }
     }
 
@@ -139,7 +155,24 @@ class BinanceServiceRest(val config: AppConfiguration) : BinanceServiceRestApi {
         }
     }
 
-    override suspend fun startUserDataStream(): String {
+
+
+    suspend fun getLatestPrice(): TickerPrice {
+        val r = client.get<String>("${config.binanceRestUrl}/api/v3/ticker/price") {
+            header("X-MBX-APIKEY", config.binanceApiKey)
+            url {
+                signedParameters {
+                    //parameter("recvWindow", 1L)
+                    parameter("timestamp", Instant.now().toEpochMilli())
+                }
+            }
+        }
+        return withContext(Dispatchers.IO) {
+            AppObjectMapper.mapper().readValue(r, TickerPrice::class.java)
+        }
+    }
+
+    override suspend fun userDataStream(): String {
         val r = client.post<String>("${config.binanceRestUrl}/api/v3/userDataStream") {
             header("X-MBX-APIKEY", config.binanceApiKey)
         }
@@ -158,7 +191,7 @@ class BinanceServiceRest(val config: AppConfiguration) : BinanceServiceRestApi {
 
     override suspend fun getCandlestickBars(symbol: String, interval: String, limit: Int?,
                                             startTime: Long?, endTime: Long?
-    ): List<Candlestick> {
+    ): List<CandlestickArr> {
         val r = client.get<String>("${config.binanceRestUrl}/api/v1/klines") {
             header("X-MBX-APIKEY", config.binanceApiKey)
             url {
@@ -169,8 +202,9 @@ class BinanceServiceRest(val config: AppConfiguration) : BinanceServiceRestApi {
                 endTime?.let { parameter("endTime", endTime) }
             }
         }
+        logger.debug { r }
         return withContext(Dispatchers.IO) {
-            AppObjectMapper.mapper().readValue(r, object : TypeReference<List<Candlestick>>() {})
+            AppObjectMapper.mapper().readValue(r, object : TypeReference<List<CandlestickArr>>() {})
         }
     }
 

@@ -1,6 +1,9 @@
 package com.leantrace.clients.binance
 
 import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.leantrace.converters.UnixTimestampDeserializer
 import java.math.BigDecimal
@@ -58,7 +61,10 @@ data class StreamResponse(
     val data: String
 )
 
-
+data class TickerPrice(
+    val symbol: String,
+    val price: BigDecimal,
+)
 
 data class UserData(
     val outboundAccountPosition: UserDataOutboundAccountPosition? = null,
@@ -66,6 +72,86 @@ data class UserData(
     val balanceUpdate: UserDataOutboundAccountPosition? = null,
     val listStatus: UserDataOutboundAccountPosition? = null
 )
+
+data class CandlestickRec(
+    @JsonAlias("e") val eventType: String,
+    @JsonAlias("E") @JsonDeserialize(using = UnixTimestampDeserializer::class) val eventTime: LocalDateTime,
+    @JsonAlias("k") val candlestick: Candlestick,
+    @JsonAlias("s") val symbol: String,
+)
+
+/**
+ * Kline/Candlestick intervals.
+ * m -> minutes; h -> hours; d -> days; w -> weeks; M -> months
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+enum class CandlestickInterval(val intervalId: String) {
+    ONE_MINUTE("1m"),
+    THREE_MINUTES("3m"),
+    FIVE_MINUTES("5m"),
+    FIFTEEN_MINUTES("15m"),
+    HALF_HOURLY("30m"),
+    HOURLY("1h"),
+    TWO_HOURLY("2h"),
+    FOUR_HOURLY("4h"),
+    SIX_HOURLY("6h"),
+    EIGHT_HOURLY("8h"),
+    TWELVE_HOURLY("12h"),
+    DAILY("1d"),
+    THREE_DAILY("3d"),
+    WEEKLY("1w"),
+    MONTHLY("1M")
+}
+
+interface CandlestickI {
+    val openPrice: BigDecimal
+    val highPrice: BigDecimal
+    val lowPrice: BigDecimal
+    val closePrice: BigDecimal
+    val baseAssetVolume: BigDecimal
+    val closeTime: LocalDateTime
+    val quoteAssetVolume: BigDecimal
+    val numberOfTrades: Long
+    val takerBuyQuoteAssetVolume: BigDecimal
+    val takerBuyBaseAssetVolume: BigDecimal
+}
+
+data class Candlestick(
+    @JsonAlias("o") override val openPrice: BigDecimal,
+    @JsonAlias("h") override val highPrice: BigDecimal,
+    @JsonAlias("l") override val lowPrice: BigDecimal,
+    @JsonAlias("c") override val closePrice: BigDecimal,
+    @JsonAlias("v") override val baseAssetVolume: BigDecimal,
+    @JsonAlias("q") override val quoteAssetVolume: BigDecimal,
+    @JsonAlias("n") override val numberOfTrades: Long,
+    @JsonAlias("Q") override val takerBuyQuoteAssetVolume: BigDecimal,
+    @JsonAlias("V") override val takerBuyBaseAssetVolume: BigDecimal,
+    @JsonAlias("T") override @JsonDeserialize(using = UnixTimestampDeserializer::class) val closeTime: LocalDateTime,
+    @JsonAlias("t") @JsonDeserialize(using = UnixTimestampDeserializer::class) val openTime: LocalDateTime,
+    @JsonAlias("s") val symbol: String,
+    @JsonAlias("B") val bIgnore: Long,
+    @JsonAlias("f") val firstTradeID: Long,
+    @JsonAlias("i") val interval: String,
+    @JsonAlias("L") val lastTradeID: Long,
+    @JsonAlias("x") val isCandlestickClosed: Boolean
+) : CandlestickI
+
+@JsonFormat(shape = JsonFormat.Shape.ARRAY)
+@JsonPropertyOrder
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class CandlestickArr(
+    @JsonDeserialize(using = UnixTimestampDeserializer::class) val openTime: LocalDateTime,
+    override val openPrice: BigDecimal,
+    override val highPrice: BigDecimal,
+    override val lowPrice: BigDecimal,
+    override val closePrice: BigDecimal,
+    override val baseAssetVolume: BigDecimal,
+    override @JsonDeserialize(using = UnixTimestampDeserializer::class) val closeTime: LocalDateTime,
+    override val quoteAssetVolume: BigDecimal,
+    override val numberOfTrades: Long,
+    override val takerBuyQuoteAssetVolume: BigDecimal,
+    override val takerBuyBaseAssetVolume: BigDecimal,
+) : CandlestickI
 
 
 enum class UserDataEventTypes {
@@ -196,7 +282,7 @@ data class OrderRequest(
     val symbol: String,
     val side: OrderSide,
     val type: OrderType,
-    val quantity: String,
-    val price: String,
+    val quantity: BigDecimal,
+    val price: BigDecimal,
     val timeInForce: OrderTimeInForce = OrderTimeInForce.GTX
 )

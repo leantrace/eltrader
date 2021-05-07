@@ -3,6 +3,7 @@ package com.leantrace.domain
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.leantrace.clients.binance.OrderSide
 import org.springframework.data.mongodb.core.mapping.Document
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -11,18 +12,18 @@ class BinanceOrder(
     override var id: BinanceOrderId = createId(),
     created: LocalDateTime = LocalDateTime.now(),
     updated: LocalDateTime = LocalDateTime.now(),
-    clientOrderId: String,
+    clientOrderId: Long,
     symbol: String,
     orderId: Long,
-    transactTime: Long,
-    price: String,
-    origQty: String,
-    executedQty: String,
-    cummulativeQuoteQty: String,
+    transactTime: LocalDateTime,
+    price: BigDecimal,
+    origQty: BigDecimal,
+    executedQty: BigDecimal,
+    cummulativeQuoteQty: BigDecimal,
     status: OrderStatus,
     timeInForce: TimeInForce,
     type: OrderType,
-    side: OrderSide,
+    side: OrderSide?,
     version: Int? = null
 ) : Trackable<BinanceOrder>(created, updated, version) {
 

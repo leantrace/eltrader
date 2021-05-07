@@ -8,6 +8,7 @@ package com.leantrace
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.ConstructorBinding
+import org.springframework.scheduling.annotation.EnableScheduling
 
 @ConstructorBinding
 @ConfigurationProperties("app.env")

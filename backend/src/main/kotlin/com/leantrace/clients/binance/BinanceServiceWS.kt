@@ -11,7 +11,6 @@ import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
 
 
 /**
@@ -44,6 +43,7 @@ class BinanceServiceWS (val config: AppConfiguration) : BinanceServiceWSApi  {
 
     suspend fun userData(userkey: String, callback: BinanceApiCallback<Map<*, *>>) = onChannel(listOf(""), userkey, Map::class.java, callback)
 
+    suspend fun candlestick(symbols: List<String>, interval: CandlestickInterval, callback: BinanceApiCallback<CandlestickRec>) = onChannel(symbols, "@kline_${interval.intervalId}", CandlestickRec::class.java, callback)
 
     suspend fun <T> onChannel(symbols: List<String>, channel: String, clazz: Class<T>, callback: BinanceApiCallback<T>) {
         logger.info { "Connecting to $channel with base url ${config.binanceWssUrl}" }
@@ -92,76 +92,5 @@ class BinanceServiceWS (val config: AppConfiguration) : BinanceServiceWSApi  {
             }
 
         }
-    }
-
-    override suspend fun performWebSocket() {
-        val defaultTickers = config.tradeables.split(",").map { "$it${config.bridge}" }
-        logger.info { "Connecting..." }
-        client.wss(
-            urlString = config.binanceWssUrl
-        ) {
-            logger.info { "Connected!" }
-
-            val binanceSubscription = BinanceSubscription(
-                //params = listOf("!miniTicker@arr")
-                params = defaultTickers.map { symbol -> "${symbol.toLowerCase()}@aggTrade" }
-                 //   .plus(defaultTickers.map { symbol -> "${symbol.toLowerCase()}@miniTicker" })
-                //    .plus(defaultTickers.map { symbol -> "${symbol.toLowerCase()}@forceOrder" }
-                //        .plus(defaultTickers.map { symbol -> "${symbol.toLowerCase()}@kline_1m" })))
-            )
-
-            //logger.info { format.encodeToString(binanceSubscription) }
-            withContext(Dispatchers.IO) {
-                send(AppObjectMapper.mapper().writeValueAsString(binanceSubscription))
-            }
-
-            try {
-                for (frame in incoming) {
-                    val text = (frame as Frame.Text).readText()
-                    val binanceElement = AppObjectMapper.mapper().readValue(text, Map::class.java)
-                    val stream = binanceElement["stream"]
-                    val data = binanceElement["data"]
-                    if (stream == null) {
-                        logger.info { "NULL: $binanceElement" }
-                    } else {
-                        when (val it = stream.toString().split('@').last()) {
-                            "miniTicker" -> {
-                                val miniTicker = AppObjectMapper.mapper().convertValue(data, MiniTicker::class.java)
-                                //logger.info { miniTicker }
-                                //miniTickers[miniTicker.symbol] = miniTicker
-                            }
-                            "aggTrade" -> {
-                                val aggTrade = AppObjectMapper.mapper().convertValue(data, AggTrade::class.java)
-                                logger.info { aggTrade }
-                                //logger.info { aggTrade.quantity * aggTrade.price }
-                                if (aggTrade.quantity * aggTrade.price >= BigDecimal(10000)) {
-                                    logger.info {
-                                        "[${aggTrade.symbol}] ${aggTrade.quantity * aggTrade.price} " +
-                                                if (aggTrade.isBuyerMarketMaker) "SELL" else "BUY"
-                                    }
-
-                                    val orderRequest = OrderRequest(
-                                        aggTrade.symbol, OrderSide.BUY, OrderType.LIMIT,
-                                        aggTrade.price.toString(), "34000.0"
-                                    )
-                                    //callWithRetries { createOrder(orderRequest) }
-                                }
-                            }
-                            else -> logger.info { "Could not decode $it" }
-                        }
-
-                    }
-
-                }
-            } catch (e: ClosedReceiveChannelException) {
-                logger.warn(e) { "Error received" }
-                logger.warn("onClose ${closeReason.await()}")
-            } catch (e: Throwable) {
-                logger.warn(e) { "Error received" }
-                logger.warn("onError ${closeReason.await()}")
-            }
-
-        }
-
     }
 }
