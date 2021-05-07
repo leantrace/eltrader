@@ -12,7 +12,7 @@ class BinanceOrder(
     override var id: BinanceOrderId = createId(),
     created: LocalDateTime = LocalDateTime.now(),
     updated: LocalDateTime = LocalDateTime.now(),
-    clientOrderId: Long,
+    clientOrderId: String,
     symbol: String,
     orderId: Long,
     transactTime: LocalDateTime,

@@ -17,6 +17,7 @@ app:
     binance-api-secret: ${env.BINANCE_API_SECRET}
     tradeables: ${env.TRADEABLES:XRP}
     bridge: ${env.BRIDGE:USDT}
+    bridgeAmount: ${env.BRIDGE_AMOUNT:10}
   data:
     mongodb:
       database: eltrader

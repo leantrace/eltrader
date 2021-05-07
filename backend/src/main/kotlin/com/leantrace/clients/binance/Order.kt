@@ -11,20 +11,20 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 data class Order(
-    val clientOrderId: Long,
-    val cummulativeQuoteQty: BigDecimal,
-    val executedQty: BigDecimal,
-    val fills: List<Fill>,
+    val symbol: String,
     val orderId: Long,
     val orderListId: Long,
-    val origQty: BigDecimal,
+    val clientOrderId: String,
+    @JsonDeserialize(using = UnixTimestampDeserializer::class) val transactTime: LocalDateTime,
     val price: BigDecimal,
-    val symbol: String,
-    val side: OrderSide?,
+    val origQty: BigDecimal,
+    val executedQty: BigDecimal,
+    val cummulativeQuoteQty: BigDecimal,
     val status: OrderStatus,
     val timeInForce: TimeInForce,
-    @JsonDeserialize(using = UnixTimestampDeserializer::class) val transactTime: LocalDateTime,
-    val type: OrderType
+    val type: OrderType,
+    val side: OrderSide? = null,
+    val fills: List<Fill> = emptyList()
 )
 
 data class Fill(

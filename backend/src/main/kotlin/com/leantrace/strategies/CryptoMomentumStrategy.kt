@@ -31,7 +31,7 @@ import java.util.*
 @Component
 @EnableConfigurationProperties(AppConfiguration::class)
 class CryptoMomentumStrategy(
-    final val config: AppConfiguration,
+    val config: AppConfiguration,
     val binanceOrderService: BinanceOrderService,
     val apirest: BinanceServiceRest,
     val apiws: BinanceServiceWS
@@ -39,7 +39,6 @@ class CryptoMomentumStrategy(
     companion object {
 
         private val strategyName = "Crypto momentum strategy"
-        private val counterCurrencyBuyOrderAmount = BigDecimal("0.00015303")
         private const val DECIMAL_FORMAT = "#.########"
         private val ZERO_DOT_ZERO_THREE: Num = DecimalNum.valueOf(0.03)
         private const val DURATION_OF_BAR = 1L
@@ -199,17 +198,15 @@ class CryptoMomentumStrategy(
         logger.info("Best ASK price=" + DecimalFormat(DECIMAL_FORMAT).format(bestAskPrice))
 
         // Execute the appropriate algorithm based on the last order type.
-        lastOrder?.let {
-            when {
-                it.side === OrderSide.BUY -> {
-                    // executeAlgoForWhenLastOrderWasBuy(bestBidPrice)
-                }
-                it.side === OrderSide.SELL -> {
-                    //executeAlgoForWhenLastOrderWasSell(bestBidPrice, bestAskPrice)
-                }
-                it.side == null -> {
-                    executeAlgoForWhenLastOrderWasNone(bestBidPrice)
-                }
+        when {
+            lastOrder == null -> {
+                executeAlgoForWhenLastOrderWasNone(bestBidPrice)
+            }
+            lastOrder?.side === OrderSide.BUY -> {
+                // executeAlgoForWhenLastOrderWasBuy(bestBidPrice)
+            }
+            lastOrder?.side === OrderSide.SELL -> {
+                //executeAlgoForWhenLastOrderWasSell(bestBidPrice, bestAskPrice)
             }
         }
     }
@@ -294,9 +291,9 @@ class CryptoMomentumStrategy(
     private suspend fun executeAlgoForWhenLastOrderWasNone(currentBidPrice: BigDecimal) {
         logger.info("$symbol OrderType is NONE - looking for new BUY order at [${DecimalFormat(DECIMAL_FORMAT).format(currentBidPrice)}]")
         try {
-            if (strategy.shouldEnter(endIndex)) {
+            if (strategy.shouldEnter(endIndex) ||true) {
                 logger.info("$strategyName Sending initial BUY order to exchange --->")
-                amountOfBaseCurrencyToBuy = getAmountOfBaseCurrencyToBuyForGivenCounterCurrencyAmount(counterCurrencyBuyOrderAmount)
+                amountOfBaseCurrencyToBuy = getAmountOfBaseCurrencyToBuyForGivenCounterCurrencyAmount(config.bridgeAmount)
                 val entered = tradingRecord.enter(
                     endIndex, DecimalNum.valueOf(currentBidPrice),
                     DecimalNum.valueOf(amountOfBaseCurrencyToBuy)
@@ -343,13 +340,13 @@ class CryptoMomentumStrategy(
         )
 
         // Fetch the last trade price
-        val lastTradePriceForOneBtc = apirest.getLatestPrice(symbol).price
+        val lastTradePrice = apirest.getLatestPrice(symbol).price
         logger.info(
             (symbol + " Last trade price for 1 " + baseCurrency + " was: "
-                    + DecimalFormat(DECIMAL_FORMAT).format(lastTradePriceForOneBtc) + config.bridge)
+                    + DecimalFormat(DECIMAL_FORMAT).format(lastTradePrice) + config.bridge)
         )
         val amountOfBaseCurrencyToBuy =
-            amountOfCounterCurrencyToTrade.divide(lastTradePriceForOneBtc, 8, RoundingMode.HALF_DOWN)
+            amountOfCounterCurrencyToTrade.divide(lastTradePrice, 8, RoundingMode.HALF_DOWN)
         /**
          * Some pairs have a minimum trade size. We have to round the base currency to buy to the
          * minimum trade size if the base currency size is smaller then the minimum trade size.

@@ -78,7 +78,7 @@ class BinanceServiceRest(val config: AppConfiguration) : BinanceServiceRestApi {
             {
               "symbol": "BTCUSDT",
               "orderId": 28,
-              "orderListId": -1, //Unless OCO, value will be -1
+              "orderListId": -1,
               "clientOrderId": "6gCrw2kRUAF9CvJDGP16IP",
               "transactTime": 1507725176595,
               "price": "0.00000000",

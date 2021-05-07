@@ -6,6 +6,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.math.BigDecimal
 import java.util.logging.Logger
 
 /**
@@ -34,7 +35,8 @@ fun main() {
         dotenv["BINANCE_API_KEY"],
         dotenv["BINANCE_API_SECRET"],
         dotenv["TRADEABLES"],
-        dotenv["BRIDGE"])
+        dotenv["BRIDGE"],
+        BigDecimal(dotenv["BRIDGE_AMOUNT"]))
 
     /* GlobalScope.launch {
         repeat(Int.MAX_VALUE) {
