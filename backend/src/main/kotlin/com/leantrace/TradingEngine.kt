@@ -19,6 +19,7 @@ class TradingEngine(val strategy: CryptoMomentumStrategy) {
     init {
         GlobalScope.launch {
             strategy.init()
+            strategy.execute()
         }
     }
 

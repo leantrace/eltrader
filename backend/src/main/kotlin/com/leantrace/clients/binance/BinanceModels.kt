@@ -111,7 +111,7 @@ interface CandlestickI {
     val baseAssetVolume: BigDecimal
     val closeTime: LocalDateTime
     val quoteAssetVolume: BigDecimal
-    val numberOfTrades: Long
+    val numberOfTrades: BigDecimal
     val takerBuyQuoteAssetVolume: BigDecimal
     val takerBuyBaseAssetVolume: BigDecimal
 }
@@ -123,7 +123,7 @@ data class Candlestick(
     @JsonAlias("c") override val closePrice: BigDecimal,
     @JsonAlias("v") override val baseAssetVolume: BigDecimal,
     @JsonAlias("q") override val quoteAssetVolume: BigDecimal,
-    @JsonAlias("n") override val numberOfTrades: Long,
+    @JsonAlias("n") override val numberOfTrades: BigDecimal,
     @JsonAlias("Q") override val takerBuyQuoteAssetVolume: BigDecimal,
     @JsonAlias("V") override val takerBuyBaseAssetVolume: BigDecimal,
     @JsonAlias("T") override @JsonDeserialize(using = UnixTimestampDeserializer::class) val closeTime: LocalDateTime,
@@ -148,7 +148,7 @@ data class CandlestickArr(
     override val baseAssetVolume: BigDecimal,
     override @JsonDeserialize(using = UnixTimestampDeserializer::class) val closeTime: LocalDateTime,
     override val quoteAssetVolume: BigDecimal,
-    override val numberOfTrades: Long,
+    override val numberOfTrades: BigDecimal,
     override val takerBuyQuoteAssetVolume: BigDecimal,
     override val takerBuyBaseAssetVolume: BigDecimal,
 ) : CandlestickI

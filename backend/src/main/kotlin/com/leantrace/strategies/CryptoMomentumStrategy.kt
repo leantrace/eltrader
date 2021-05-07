@@ -50,7 +50,7 @@ class CryptoMomentumStrategy(
         private lateinit var asks: NavigableMap<BigDecimal, BigDecimal>
         private lateinit var bids: NavigableMap<BigDecimal, BigDecimal>
         private val accountBalanceCache: TreeMap<String, Balance> = TreeMap()
-        private val candlesticksCache: TreeMap<Long, Candlestick> = TreeMap()
+        private var candlesticksCache: TreeMap<Long, CandlestickI> = TreeMap()
     }
 
     private var lastUpdateId: Long = 0
@@ -82,6 +82,7 @@ class CryptoMomentumStrategy(
             startCandlestickEventStreaming(symbol)
         }
         initializeDepthCache(symbol)
+        initializeCandlestickCache(symbol)
         series = setupBarsSeries(symbol)
         strategy = buildStrategy(series)
     }
@@ -149,6 +150,17 @@ class CryptoMomentumStrategy(
         }
     }
 
+    suspend fun initializeCandlestickCache(symbol: String) {
+        val candlestickBars: List<CandlestickArr> = apirest.getCandlestickBars(
+            symbol.toUpperCase(),
+            CandlestickInterval.ONE_MINUTE.intervalId
+        )
+        candlesticksCache = TreeMap<Long, CandlestickI>()
+        candlestickBars.forEach {
+            candlesticksCache[it.openTime.toInstant(ZoneOffset.UTC).toEpochMilli()] = it
+        }
+    }
+
     private suspend fun setupBarsSeries(symbol: String): BarSeries {
         series = BaseBarSeriesBuilder().withName(symbol).withNumTypeOf(DecimalNum::class.java).build()
         series.maximumBarCount = 50
@@ -169,7 +181,7 @@ class CryptoMomentumStrategy(
          * Is this the first time the Strategy has been called? If yes, we initialise the OrderState so
          * we can keep track of orders during later cycles.
          */
-        if (lastOrder?.orderId == -1L) {
+        if (lastOrder == null) {
             logger.debug("$symbol First time Strategy has been called - creating new empty Order object.")
         }
         series.addBar(convertCandleStickToBaseBar(newestCandleStick))
@@ -179,8 +191,10 @@ class CryptoMomentumStrategy(
                     + newestCandleStick.highPrice + " - " + newestCandleStick.lowPrice + " - "
                     + newestCandleStick.closePrice + " to series] >>>"
         )
-        logger.info((("AccountDetails: <<< Free amount of BTC on account to trade with: "
-                    + accountBalanceCache["BTC"]?.free) + " >>>"))
+        logger.info((("AccountDetails: <<< Free amount of $baseCurrency on account to trade with: "
+                + accountBalanceCache[baseCurrency.toUpperCase()]?.free) + " >>>"))
+        logger.info((("AccountDetails: <<< Free amount of ${config.bridge} on account to trade with: "
+                + accountBalanceCache[config.bridge.toUpperCase()]?.free) + " >>>"))
         logger.info("Best BID price=" + DecimalFormat(DECIMAL_FORMAT).format(bestBidPrice))
         logger.info("Best ASK price=" + DecimalFormat(DECIMAL_FORMAT).format(bestAskPrice))
 
@@ -262,12 +276,13 @@ class CryptoMomentumStrategy(
     private fun convertCandleStickToBaseBar(cs: CandlestickI): Bar {
         return BaseBar(
             Duration.ofMinutes(DURATION_OF_BAR),
-            cs.closeTime.atZone(ZoneId.of("UTC")),
+            ZonedDateTime.now(ZoneId.of("UTC")),
             cs.openPrice,
             cs.highPrice,
             cs.lowPrice,
             cs.closePrice,
-            cs.baseAssetVolume
+            cs.baseAssetVolume,
+            cs.numberOfTrades
         )
     }
 
