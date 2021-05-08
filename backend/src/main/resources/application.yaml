@@ -21,7 +21,7 @@ app:
   data:
     mongodb:
       database: eltrader
-      uri: mongodb://localhost:27017/?replicaSet=rs0
+      uri: ${env.MONGODB_URI}
 
 mongock:
   change-logs-scan-package: com.leantrace.mongo.changelogs

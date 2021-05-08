@@ -22,7 +22,7 @@ class TradingEngine(val strategy: CryptoMomentumStrategy) {
         }
     }
 
-    @Scheduled(fixedDelay = 10*1000)
+    @Scheduled(fixedDelay = 60*1000)
     fun scheduleFixedDelayTask() {
         logger.info("Execute: "+LocalDateTime.now())
         GlobalScope.launch {

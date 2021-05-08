@@ -290,6 +290,9 @@ class CryptoMomentumStrategy(
     @Throws(StrategyException::class)
     private suspend fun executeAlgoForWhenLastOrderWasNone(currentBidPrice: BigDecimal) {
         logger.info("$symbol OrderType is NONE - looking for new BUY order at [${DecimalFormat(DECIMAL_FORMAT).format(currentBidPrice)}]")
+        logger.info("bar data size= ${series.barData.size}")
+        series.barData.forEach { logger.info("${it.closePrice} ${it.isBullish}") }
+        logger.info("$endIndex")
         try {
             if (strategy.shouldEnter(endIndex)) {
                 logger.info("$strategyName Sending initial BUY order to exchange --->")

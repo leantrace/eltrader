@@ -1,0 +1,6 @@
+app:
+  data:
+    mongodb:
+      database: eltrader
+      uri: mongodb://localhost:27017/?replicaSet=rs0
+

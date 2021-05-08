@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service
+import java.util.*
 
 
 /**
@@ -52,7 +53,7 @@ class BinanceServiceWS (val config: AppConfiguration) : BinanceServiceWSApi  {
         ) {
             logger.info { "Connected to $channel" }
             val binanceSubscription = BinanceSubscription(
-                params = symbols.map { "${it.toLowerCase()}${channel}" }
+                params = symbols.map { "${it.lowercase(Locale.getDefault())}${channel}" }
             )
             logger.info { "Subscribe to $binanceSubscription" }
             withContext(Dispatchers.IO) {
@@ -66,9 +67,9 @@ class BinanceServiceWS (val config: AppConfiguration) : BinanceServiceWSApi  {
                     }
                     val stream = binanceElement["stream"]
                     val data = binanceElement["data"]
-                    logger.debug { binanceElement }
+                    logger.trace { binanceElement }
                     if (stream != null) {
-                        logger.debug{stream}
+                        logger.trace{stream}
                         when (val it = stream.toString().split('@').last()) {
                             channel.replace("@","") -> {
                                 // logger.info { data }

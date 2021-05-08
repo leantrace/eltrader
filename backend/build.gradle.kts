@@ -29,6 +29,9 @@ plugins {
     `java-library`
 }
 
+apply(plugin = "io.spring.dependency-management")
+
+
 allOpen {
     annotation("javax.persistence.Entity")
     annotation("javax.persistence.Embeddable")
@@ -73,6 +76,10 @@ dependencies {
     implementation("com.github.cloudyrock.mongock:mongodb-springdata-v3-driver:$mongockVersion")
 
     implementation("org.ta4j:ta4j-core:0.14")
+}
+
+springBoot {
+    mainClass.set("com.leantrace.ApplicationKt")
 }
 
 tasks.withType<KotlinCompile> {
